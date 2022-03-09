@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-red
+  namespace: prod
+  labels:
+    app: node-red
+spec:
+  selector:
+    matchLabels:
+      app: node-red
+  template:
+    metadata:
+      labels:
+        app: node-red
+      annotations:
+        telegraf.influxdata.com/inputs: |+
+          [[inputs.cpu]]
+            percpu = true
+            totalcpu = true
+            collect_cpu_time = false
+            report_active = false
+          [[inputs.disk]]
+            ignore_fs = ["tmpfs", "devtmpfs", "devfs", "iso9660", "overlay", "aufs", "squashfs"]
+          [[inputs.diskio]]
+          [[inputs.kernel]]
+          [[inputs.mem]]
+          [[inputs.net]]
+          [[inputs.processes]]
+          [[inputs.swap]]
+          [[inputs.system]]
+        telegraf.influxdata.com/class: influxdb_v2
+        telegraf.influxdata.com/env-fieldref-NAMESPACE: metadata.namespace
+        telegraf.influxdata.com/limits-cpu: '750m'
+        # invalid memory limit, which will be ignored
+        telegraf.influxdata.com/limits-memory: '800x'
+    spec:
+      containers:
+      - name: node-red
+        image: nodered/node-red:latest
+        ports:
+        - containerPort: 1880
+          name: node-red-ui
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: node-red-data
+          subPathExpr: $(NODE_NAME)
+          mountPath: /data
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: TZ
+          value: America/Los_Angeles
+      volumes:
+      - name: node-red-data
+        persistentVolumeClaim:
+          claimName: node-red-claim
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: node-red-claim
+  namespace: prod
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rode-red
+  namespace: prod
+spec:
+  selector:
+    app: node-red
+  type: LoadBalancer
+  ports:
+    - name: node-red-ui
+      port: 1880
+      protocol: TCP
+      targetPort: node-red-ui

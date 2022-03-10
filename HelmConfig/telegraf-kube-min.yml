@@ -141,14 +141,6 @@ config:
         kubernetes_services:
           - "http://kube-state-kube-state-metrics.kube-system:8080/metrics"
         monitor_kubernetes_pods: true
-    - prometheus:
-        name_override: "node-exporter"
-        metric_version: 2
-        insecure_skip_verify: true
-        bearer_token: "/var/run/secrets/kubernetes.io/serviceaccount/token"
-        tls_ca: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-        kubernetes_services:
-          - "http://node-exporter-prometheus-node-exporter.kube-system:9100/metrics"
 
 
 metrics:

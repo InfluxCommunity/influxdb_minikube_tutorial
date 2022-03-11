@@ -17,10 +17,10 @@ stringData:
     [[outputs.file]]
       files = ["stdout"]
     [global_tags]
-      hostname = "$HOSTNAME"
-      nodename = "$NODENAME"
+      node = "$NODENAME"
       namespace = "$NAMESPACE"
-      type = "app"
+      pod = "$POD_NAME"
+      pod_ip = "$POD_IP"
   basic: |+
     [[outputs.influxdb]]
       urls = ["http://influxdb.influxdb:8086"]
@@ -49,8 +49,10 @@ stringData:
       metric_batch_size = 10000
       metric_buffer_limit = 100000
     [global_tags]
-      hostname = "$HOSTNAME"
-      nodename = "$NODENAME"
+      node = "$NODENAME"
+      namespace = "$NAMESPACE"
+      pod = "$POD_NAME"
+      pod_ip = "$POD_IP"
   # example for a specific environment that sets global tags and reports to InfluxDB V2
   acc: |+
     [[outputs.influxdb_v2]]
